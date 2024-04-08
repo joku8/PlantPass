@@ -42,7 +42,10 @@ function Calculator() {
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setQuantities({ ...quantities, [name]: value === "" ? "" : Number(value) });
+    setQuantities({
+      ...quantities,
+      [name]: isNaN(value) || value === "" ? "" : Number(value),
+    });
   };
 
   const calculateTotal = () => {
@@ -91,7 +94,6 @@ function Calculator() {
     )
       .then((response) => {
         console.log("Data sent successfully");
-        // You can implement additional logic here to handle the response if needed.
       })
       .catch((error) => {
         console.error("Error sending data:", error);
@@ -160,9 +162,9 @@ function Calculator() {
       </Grid>
       <Typography>{`Subtotal: $${totals.subtotal}`}</Typography>
       <Typography>{`Discount: -$${totals.discount}`}</Typography>
-      <Typography
-        sx={{ fontWeight: "bold" }}
-      >{`Grand Total: $${totals.grandTotal}`}</Typography>
+      <Typography sx={{ fontWeight: "bold" }}>{`Grand Total: $${Math.floor(
+        totals.grandTotal
+      )}`}</Typography>
       <Typography>{`Blooming Status: ${totals.bloomingStatus}`}</Typography>
     </Grid>
   );
