@@ -88,30 +88,6 @@ function Tracker({ api }) {
     return records.reduce((total, record) => total + record.quantity, 0);
   };
 
-  // const handleClearAll = () => {
-  //   setLoading(true); // Set loading before initiating delete
-  //   // Replace YOUR_SCRIPT_ID with the actual ID of your Apps Script deployment.
-  //   fetch(
-  //     "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
-  //     {
-  //       method: "POST",
-  //       mode: "no-cors", // 'no-cors' prevents reading the response body, which is fine here
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ deleteAll: true }),
-  //     }
-  //   )
-  //     .then(() => {
-  //       setRecords([]);
-  //       setLoading(false);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error deleting all records:", error);
-  //       setLoading(false);
-  //     });
-  // };
-
   if (loading) {
     return (
       <Box
@@ -122,7 +98,7 @@ function Tracker({ api }) {
           height: "100vh",
         }}
       >
-        <CircularProgress />
+        <CircularProgress color="secondary" />
       </Box>
     );
   }
