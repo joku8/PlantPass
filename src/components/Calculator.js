@@ -12,13 +12,13 @@ import { Snackbar, Alert } from "@mui/material";
 
 function Calculator({ api }) {
   const initialQuantities = {
-    twoInchQty: 0,
-    fourInchQty: 0,
-    threePackQty: 0,
-    fourPackQty: 0,
-    fiveHalfSixInchQty: 0,
-    decorativeQty: 0,
-    fiveGallonQty: 0,
+    twoInchQty: "",
+    fourInchQty: "",
+    threePackQty: "",
+    fourPackQty: "",
+    fiveHalfSixInchQty: "",
+    decorativeQty: "",
+    fiveGallonQty: "",
   };
 
   const initialTotals = {
@@ -56,13 +56,14 @@ function Calculator({ api }) {
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    const numericValue = isNaN(value) || value === "" ? 0 : Number(value);
+    const validValue = value.match(/^\d*$/) ? value : "";
 
     setQuantities({
       ...quantities,
-      [name]: numericValue,
+      [name]: validValue,
     });
 
+    const numericValue = validValue === "" ? 0 : parseFloat(validValue);
     setSubtotals({
       ...subtotals,
       [name]: (numericValue * prices[name]).toFixed(2),
@@ -71,9 +72,11 @@ function Calculator({ api }) {
 
   const calculateTotal = () => {
     const subtotal = Object.keys(quantities).reduce((acc, key) => {
-      const quantity = parseFloat(quantities[key]) || 0;
+      const quantityStr = quantities[key];
+      const quantity = quantityStr === "" ? 0 : parseFloat(quantityStr);
       return acc + prices[key] * quantity;
     }, 0);
+
     const totalItems = Object.values(quantities).reduce(
       (acc, quantity) => acc + (parseFloat(quantity) || 0),
       0
@@ -128,6 +131,7 @@ function Calculator({ api }) {
 
   const handleNewOrder = () => {
     setQuantities(initialQuantities);
+    setSubtotals(initialQuantities);
     setTotals(initialTotals);
     setIsPerennialPowerhouse(false);
   };
@@ -151,7 +155,7 @@ function Calculator({ api }) {
             <Grid item xs={10}>
               <TextField
                 label={`${labelsDictionary[key]} $${prices[key].toFixed(2)}`}
-                type="number"
+                type="text" // Change type to text to allow intermediate invalid entries to be handled
                 value={quantities[key]}
                 onChange={handleInputChange}
                 name={key}
@@ -160,7 +164,9 @@ function Calculator({ api }) {
               />
             </Grid>
             <Grid item xs={2}>
-              <Typography align="right">${subtotals[key]}</Typography>
+              <Typography align="right">
+                ${subtotals[key] === "" ? "0.00" : subtotals[key]}
+              </Typography>
             </Grid>
           </Grid>
         ))}
