@@ -44,6 +44,7 @@ export default function App() {
           backgroundColor: backgound,
           color: text,
           borderRadius: "15px",
+          marginTop: "15px",
         }}
       >
         <Typography
