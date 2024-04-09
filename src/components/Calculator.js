@@ -7,8 +7,9 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import { v4 as uuidv4 } from "uuid";
 
-function Calculator() {
+function Calculator({ api }) {
   const initialQuantities = {
     twoInchQty: 0,
     fourInchQty: 0,
@@ -40,6 +41,16 @@ function Calculator() {
     fiveGallonQty: 25.0,
   };
 
+  const labelsDictionary = {
+    twoInchQty: "Two Inch",
+    fourInchQty: "Four Inch",
+    threePackQty: "Three Pack",
+    fourPackQty: "Four Pack",
+    fiveHalfSixInchQty: "5.5 Inch / 6 Inch",
+    decorativeQty: "Decorative",
+    fiveGallonQty: "Five Gallon",
+  };
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setQuantities({
@@ -68,32 +79,29 @@ function Calculator() {
     setTotals({
       subtotal: subtotal.toFixed(2),
       discount: totalDiscount.toFixed(2),
-      grandTotal: grandTotal.toFixed(2),
+      grandTotal: Math.floor(grandTotal).toFixed(2),
       bloomingStatus:
         totalItems >= 20 ? "Automatically Applied" : "Not Applied",
     });
 
-    // Preparing data to be sent to the Google Apps Script web app.
     const postData = {
+      delete_: false,
+      transaction_id: uuidv4(),
       timestamp: new Date().toISOString(),
       quantity: totalItems,
-      order_total: grandTotal.toFixed(2),
+      order_total: Math.floor(grandTotal),
     };
 
-    // Sending data to the Google Apps Script web app using a POST request.
-    fetch(
-      "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
-      {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(postData),
-      }
-    )
-      .then((response) => {
-        console.log("Data sent successfully");
+    fetch(api, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    })
+      .then(() => {
+        console.log("Data sent successfully: ", postData);
       })
       .catch((error) => {
         console.error("Error sending data:", error);
@@ -112,32 +120,42 @@ function Calculator() {
 
   return (
     <Grid container spacing={2} direction="column">
-      {Object.keys(prices).map((key) => (
-        <TextField
-          key={key}
-          label={
-            key
-              .replace("Qty", "")
-              .split(/(?=[A-Z])/)
-              .join(" ") + ` $${prices[key].toFixed(2)}`
-          }
-          type="number"
-          value={quantities[key]}
-          onChange={handleInputChange}
-          name={key}
-          margin="normal"
-          fullWidth
-        />
-      ))}
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={isPerennialPowerhouse}
-            onChange={togglePerennialPowerhouse}
+      <Grid item xs={12}>
+        {Object.keys(prices).map((key) => (
+          <TextField
+            key={key}
+            label={`${labelsDictionary[key]} $${prices[key].toFixed(2)}`}
+            type="number"
+            value={quantities[key]}
+            onChange={handleInputChange}
+            name={key}
+            margin="normal"
+            fullWidth
           />
-        }
-        label="Perennial Powerhouse (5%)"
-      />
+        ))}
+      </Grid>
+      <Grid item xs={12}>
+        <FormControlLabel
+          sx={{ marginLeft: 0 }}
+          labelPlacement="start"
+          control={
+            <Checkbox
+              checked={isPerennialPowerhouse}
+              onChange={togglePerennialPowerhouse}
+            />
+          }
+          label={
+            <Typography component="span" sx={{ fontWeight: "bold" }}>
+              Perennial Powerhouse (5%):
+            </Typography>
+          }
+        />
+        <Typography sx={{ marginBottom: "15px" }}>
+          <span style={{ fontWeight: "bold" }}>Blooming Bundle (5%):</span>{" "}
+          (Will be applied automatically)
+        </Typography>
+      </Grid>
+
       <Grid container spacing={2}>
         <Grid item xs={6}>
           <Button
@@ -160,12 +178,13 @@ function Calculator() {
           </Button>
         </Grid>
       </Grid>
-      <Typography>{`Subtotal: $${totals.subtotal}`}</Typography>
+      <Typography
+        sx={{ marginTop: "15px" }}
+      >{`Subtotal: $${totals.subtotal}`}</Typography>
       <Typography>{`Discount: -$${totals.discount}`}</Typography>
-      <Typography sx={{ fontWeight: "bold" }}>{`Grand Total: $${Math.floor(
-        totals.grandTotal
-      )}`}</Typography>
-      <Typography>{`Blooming Status: ${totals.bloomingStatus}`}</Typography>
+      <Typography
+        sx={{ fontWeight: "bold" }}
+      >{`Grand Total: $${totals.grandTotal}`}</Typography>
     </Grid>
   );
 }

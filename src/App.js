@@ -3,6 +3,9 @@ import { AppBar, Tabs, Tab, Typography, Box, Container } from "@mui/material";
 import Calculator from "./components/Calculator";
 import Tracker from "./components/Tracker";
 
+var API_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbwr1UOin3Oot7ERF0cgz6xHxwPx2Y6cZ6AVs9U6dfRqdWTG_tzBVkhwvtso6Skx8Q0/exec";
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -30,38 +33,51 @@ export default function App() {
     setValue(newValue);
   };
 
+  var backgound = "#F6E7FF";
+  var text = "#4AA870";
+
   return (
     <Container>
       <AppBar
         position="static"
         sx={{
-          backgroundColor: "#FECC70",
-          color: "#0D6260",
+          backgroundColor: backgound,
+          color: text,
           borderRadius: "15px",
         }}
       >
-        <Typography variant="h3" align="center" component="div">
+        <Typography
+          variant="h3"
+          sx={{ fontWeight: "bold" }}
+          align="center"
+          component="div"
+        >
           PlantPass
         </Typography>
-        <Typography variant="h5" align="center" component="div">
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: 100 }}
+          align="center"
+          component="div"
+        >
           Spring Plant Fair 2024
         </Typography>
         <Tabs
           value={value}
           onChange={handleChange}
-          aria-label="basic tabs example"
+          textColor="secondary"
+          indicatorColor="secondary"
           centered
-          sx={{ ".MuiTabs-indicator": { backgroundColor: "#0D6260" } }}
         >
           <Tab label="Calculator" />
           <Tab label="Tracker" />
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        <Calculator />
+        <Calculator api={API_ENDPOINT} />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Tracker />
+        <Tracker api={API_ENDPOINT} />
       </TabPanel>
     </Container>
   );

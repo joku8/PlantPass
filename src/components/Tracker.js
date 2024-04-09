@@ -9,28 +9,24 @@ import {
   TableRow,
   Typography,
   IconButton,
-  Button,
   Grid,
   Box, // Import Box component for layout
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-function Tracker() {
+function Tracker({ api }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    fetch(
-      "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
-      {
-        redirect: "follow",
-        method: "GET",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-      }
-    )
+    fetch(api, {
+      redirect: "follow",
+      method: "GET",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8",
+      },
+    })
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -39,40 +35,41 @@ function Tracker() {
       })
       .then((data) => {
         console.log("Received Data: ", data);
-        setRecords(data);
+        // Sort the data by timestamp, most recent first
+        const sortedData = data.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setRecords(sortedData);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
         setLoading(false);
       });
-    // Make sure to include the cleanup function to cancel the loading state if the component unmounts
+    // Cleanup function to cancel the loading state if the component unmounts
     return () => setLoading(false);
-  }, []);
+  }, [api]);
 
-  const handleDelete = (timestampToDelete) => {
+  const handleDelete = (transaction_id) => {
     setLoading(true); // Set loading before initiating delete
     const postData = {
-      delete: true,
-      timestamp: timestampToDelete,
+      delete_: true,
+      transaction_id: transaction_id,
     };
 
     // Replace YOUR_SCRIPT_ID with the actual ID of your Apps Script deployment.
-    fetch(
-      "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
-      {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(postData),
-      }
-    )
+    fetch(api, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    })
       .then(() => {
         // Assuming the delete was successful, filter out the deleted record and update the state
         const updatedRecords = records.filter(
-          (record) => record.timestamp !== timestampToDelete
+          (record) => record.transaction_id !== transaction_id
         );
         setRecords(updatedRecords);
         setLoading(false);
@@ -91,29 +88,29 @@ function Tracker() {
     return records.reduce((total, record) => total + record.quantity, 0);
   };
 
-  const handleClearAll = () => {
-    setLoading(true); // Set loading before initiating delete
-    // Replace YOUR_SCRIPT_ID with the actual ID of your Apps Script deployment.
-    fetch(
-      "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
-      {
-        method: "POST",
-        mode: "no-cors", // 'no-cors' prevents reading the response body, which is fine here
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ deleteAll: true }),
-      }
-    )
-      .then(() => {
-        setRecords([]);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error deleting all records:", error);
-        setLoading(false);
-      });
-  };
+  // const handleClearAll = () => {
+  //   setLoading(true); // Set loading before initiating delete
+  //   // Replace YOUR_SCRIPT_ID with the actual ID of your Apps Script deployment.
+  //   fetch(
+  //     "https://script.google.com/macros/s/AKfycbw37Bi5UcBDcE7jxQBJMupvRhOa30CDlRPnljxaKbPSDi-4CvaIXPkYxREa-OI4754/exec",
+  //     {
+  //       method: "POST",
+  //       mode: "no-cors", // 'no-cors' prevents reading the response body, which is fine here
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ deleteAll: true }),
+  //     }
+  //   )
+  //     .then(() => {
+  //       setRecords([]);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error deleting all records:", error);
+  //       setLoading(false);
+  //     });
+  // };
 
   if (loading) {
     return (
@@ -132,18 +129,13 @@ function Tracker() {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={6}>
+      <Grid item xs={6} style={{ textAlign: "left" }}>
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
           Total Sales: ${getTotalSales()}
         </Typography>
-        <Typography variant="h6">
-          Total Items Sold: {getTotalItemsSold()}
-        </Typography>
       </Grid>
       <Grid item xs={6} style={{ textAlign: "right" }}>
-        <Button variant="contained" color="error" onClick={handleClearAll}>
-          Clear All
-        </Button>
+        <Typography variant="h6">Items Sold: {getTotalItemsSold()}</Typography>
       </Grid>
       <Grid item xs={12}>
         <TableContainer>
@@ -199,7 +191,7 @@ function Tracker() {
                   <TableCell sx={{ textAlign: "center" }}>
                     <IconButton
                       aria-label="delete"
-                      onClick={() => handleDelete(record.timestamp)}
+                      onClick={() => handleDelete(record.transaction_id)}
                     >
                       <DeleteIcon />
                     </IconButton>
