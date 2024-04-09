@@ -8,6 +8,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
+import { Snackbar, Alert } from "@mui/material";
 
 function Calculator({ api }) {
   const initialQuantities = {
@@ -27,6 +28,8 @@ function Calculator({ api }) {
     bloomingStatus: "Not Applied",
   };
 
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [subtotals, setSubtotals] = useState(initialQuantities);
   const [quantities, setQuantities] = useState(initialQuantities);
   const [totals, setTotals] = useState(initialTotals);
   const [isPerennialPowerhouse, setIsPerennialPowerhouse] = useState(false);
@@ -53,9 +56,16 @@ function Calculator({ api }) {
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    const numericValue = isNaN(value) || value === "" ? 0 : Number(value);
+
     setQuantities({
       ...quantities,
-      [name]: isNaN(value) || value === "" ? "" : Number(value),
+      [name]: numericValue,
+    });
+
+    setSubtotals({
+      ...subtotals,
+      [name]: (numericValue * prices[name]).toFixed(2),
     });
   };
 
@@ -102,10 +112,18 @@ function Calculator({ api }) {
     })
       .then(() => {
         console.log("Data sent successfully: ", postData);
+        setOpenSnackbar(true);
       })
       .catch((error) => {
         console.error("Error sending data:", error);
       });
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
   };
 
   const handleNewOrder = () => {
@@ -122,16 +140,29 @@ function Calculator({ api }) {
     <Grid container spacing={2} direction="column">
       <Grid item xs={12}>
         {Object.keys(prices).map((key) => (
-          <TextField
+          <Grid
+            container
+            item
+            xs={12}
             key={key}
-            label={`${labelsDictionary[key]} $${prices[key].toFixed(2)}`}
-            type="number"
-            value={quantities[key]}
-            onChange={handleInputChange}
-            name={key}
-            margin="normal"
-            fullWidth
-          />
+            alignItems="center"
+            spacing={2}
+          >
+            <Grid item xs={10}>
+              <TextField
+                label={`${labelsDictionary[key]} $${prices[key].toFixed(2)}`}
+                type="number"
+                value={quantities[key]}
+                onChange={handleInputChange}
+                name={key}
+                margin="normal"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <Typography align="right">${subtotals[key]}</Typography>
+            </Grid>
+          </Grid>
         ))}
       </Grid>
       <Grid item xs={12}>
@@ -185,6 +216,20 @@ function Calculator({ api }) {
       <Typography
         sx={{ fontWeight: "bold" }}
       >{`Grand Total: $${totals.grandTotal}`}</Typography>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Order Recorded
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 }
