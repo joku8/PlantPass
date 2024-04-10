@@ -10,7 +10,7 @@ import {
   Typography,
   IconButton,
   Grid,
-  Box, // Import Box component for layout
+  Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -34,8 +34,6 @@ function Tracker({ api }) {
         return response.json();
       })
       .then((data) => {
-        console.log("Received Data: ", data);
-        // Sort the data by timestamp, most recent first
         const sortedData = data.sort(
           (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
         );
@@ -46,18 +44,13 @@ function Tracker({ api }) {
         console.error("Error fetching data:", error);
         setLoading(false);
       });
-    // Cleanup function to cancel the loading state if the component unmounts
     return () => setLoading(false);
   }, [api]);
 
   const handleDelete = (transaction_id) => {
-    setLoading(true); // Set loading before initiating delete
-    const postData = {
-      delete_: true,
-      transaction_id: transaction_id,
-    };
+    setLoading(true);
+    const postData = { delete_: true, transaction_id };
 
-    // Replace YOUR_SCRIPT_ID with the actual ID of your Apps Script deployment.
     fetch(api, {
       method: "POST",
       mode: "no-cors",
@@ -67,7 +60,6 @@ function Tracker({ api }) {
       body: JSON.stringify(postData),
     })
       .then(() => {
-        // Assuming the delete was successful, filter out the deleted record and update the state
         const updatedRecords = records.filter(
           (record) => record.transaction_id !== transaction_id
         );
@@ -80,13 +72,11 @@ function Tracker({ api }) {
       });
   };
 
-  const getTotalSales = () => {
-    return records.reduce((total, record) => total + record.order_total, 0);
-  };
+  const getTotalSales = () =>
+    records.reduce((total, record) => total + record.order_total, 0);
 
-  const getTotalItemsSold = () => {
-    return records.reduce((total, record) => total + record.quantity, 0);
-  };
+  const getTotalItemsSold = () =>
+    records.reduce((total, record) => total + record.quantity, 0);
 
   if (loading) {
     return (
@@ -105,49 +95,37 @@ function Tracker({ api }) {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={6} style={{ textAlign: "left" }}>
+      <Grid item xs={12} sm={6} style={{ textAlign: "left" }}>
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
           Total Sales: ${getTotalSales()}
         </Typography>
       </Grid>
-      <Grid item xs={6} style={{ textAlign: "right" }}>
+      <Grid item xs={12} sm={6} style={{ textAlign: "right" }}>
         <Typography variant="h6">Items Sold: {getTotalItemsSold()}</Typography>
       </Grid>
       <Grid item xs={12}>
         <TableContainer>
-          <Table>
+          <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>
-                  <Typography
-                    variant="h6"
-                    style={{ fontWeight: "bold", textAlign: "center" }}
-                  >
-                    Timestamp{" "}
+                <TableCell align="center">
+                  <Typography variant="h6" style={{ fontWeight: "bold" }}>
+                    Trash
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography
-                    variant="h6"
-                    style={{ fontWeight: "bold", textAlign: "center" }}
-                  >
+                <TableCell align="center">
+                  <Typography variant="h6" style={{ fontWeight: "bold" }}>
                     Order Total
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography
-                    variant="h6"
-                    style={{ fontWeight: "bold", textAlign: "center" }}
-                  >
-                    Quantity{" "}
+                <TableCell align="center">
+                  <Typography variant="h6" style={{ fontWeight: "bold" }}>
+                    Quantity
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography
-                    variant="h6"
-                    style={{ fontWeight: "bold", textAlign: "center" }}
-                  >
-                    Action
+                <TableCell align="center">
+                  <Typography variant="h6" style={{ fontWeight: "bold" }}>
+                    Timestamp
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -155,22 +133,18 @@ function Tracker({ api }) {
             <TableBody>
               {records.map((record, index) => (
                 <TableRow key={index}>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {new Date(record.timestamp).toLocaleString()}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {`$${record.order_total}`}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {record.quantity}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
+                  <TableCell align="center">
                     <IconButton
                       aria-label="delete"
                       onClick={() => handleDelete(record.transaction_id)}
                     >
                       <DeleteIcon />
                     </IconButton>
+                  </TableCell>
+                  <TableCell align="center">{`$${record.order_total}`}</TableCell>
+                  <TableCell align="center">{record.quantity}</TableCell>
+                  <TableCell align="center">
+                    {new Date(record.timestamp).toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
